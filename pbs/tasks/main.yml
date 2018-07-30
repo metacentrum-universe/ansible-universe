@@ -19,4 +19,4 @@
   lineinfile:
     path: /etc/pbs.conf
     regexp: "^PBS_SERVER="
-    line: "PBS_SERVER={{ pbs_server_ip }}"
+    line: "PBS_SERVER={{ pbs_server }}"
