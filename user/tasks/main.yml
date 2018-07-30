@@ -1,0 +1,16 @@
+---
+- name: "Create {{ user_group }} group"
+  group:
+    name: "{{ user_group }}"
+    gid: 2001
+    state: present
+
+- name: "Create {{ user_user}} user"
+  user:
+    name: "{{ user_user }}"
+    group: "{{ user_group }}"
+    uid: 2001
+    state: present
+    shell: /bin/bash
+    home: "{{ user_home }}"
+    create_home: yes

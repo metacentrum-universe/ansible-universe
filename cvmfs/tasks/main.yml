@@ -1,0 +1,23 @@
+- name: Install apt dependencies
+  apt:
+    name: "{{ item }}"
+  with_items:
+    - apt-transport-https
+    - ca-certificates
+
+- name: Install CernVM apt key
+  apt_key:
+    url: https://cvmrepo.web.cern.ch/cvmrepo/apt/cernvm.gpg
+
+- name: Configure CernVM apt repository
+  apt_repository:
+    filename: "cernvm.list"
+    repo: deb https://cvmrepo.web.cern.ch/cvmrepo/apt/ stretch-prod main
+
+- name: Import CVMFS stratum1 tasks
+  import_tasks: stratum1.yml
+  when: cvmfs_type == "stratum1"
+
+- name: Import CVMFS client tasks
+  import_tasks: client.yml
+  when: cvmfs_type == "client"

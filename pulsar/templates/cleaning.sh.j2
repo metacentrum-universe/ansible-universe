@@ -1,0 +1,17 @@
+#!/bin/bash
+
+STAGING_DIR="{{ pulsar_staging_directory }}"
+for d in ${STAGING_DIR}/*; do
+
+  # Completed tasks
+  grep -qs "^\"complete\"$" "${d}/final_status"
+  if [ $? -eq 0 ]; then
+    rm -rf "${d}"
+  fi
+
+  # Cancelled tasks
+  grep -qs "^true$" "${d}/cancelled"
+  if [ $? -eq 0 ]; then
+    rm -rf "${d}"
+  fi
+done

@@ -1,0 +1,31 @@
+---
+- name: Import HTCondor repo key
+  apt_key:
+    url: https://research.cs.wisc.edu/htcondor/debian/HTCondor-Release.gpg.key
+
+- name: Register HTCondor repository
+  apt_repository:
+    filename: htcondor
+    repo: deb http://research.cs.wisc.edu/htcondor/debian/8.6/stretch stretch contrib
+
+- name: Install HTCondor
+  package:
+    name: condor
+    state: latest
+
+- name: Require HTCondor local config file
+  lineinfile:
+    dest: /etc/condor/condor_config
+    line: 'REQUIRE_LOCAL_CONFIG_FILE = true'
+    regexp: '^ *REQUIRE_LOCAL_CONFIG_FILE *='
+
+- name: HTCondor local config file
+  template:
+    src: "{{ htcondor_node_type }}.j2"
+    dest: /etc/condor/condor_config.local
+
+- name: HTCondor service enable
+  service:
+    name: condor
+    enabled: yes
+    state: started

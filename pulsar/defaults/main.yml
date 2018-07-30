@@ -1,0 +1,4 @@
+pulsar_require_certificate: True
+pulsar_pbs_job_destination: galaxyeu
+pulsar_bind_port: 8913
+pulsar_user: galaxyeu

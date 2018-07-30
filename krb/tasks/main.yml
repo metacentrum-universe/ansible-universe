@@ -1,0 +1,40 @@
+---
+
+- name: Install packages
+  package:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - krb5-config
+    - heimdal-clients
+
+- name: Copy krb5.conf
+  copy:
+    src: krb5.conf
+    dest: /etc/krb5.conf
+
+- name: Copy krb5.keytab
+  copy:
+    src: krb5.keytab
+    dest: /etc/krb5.keytab
+
+- name: Get ticket
+  shell: "kinit -t /etc/krb5.keytab {{ krb_principal }}"
+  args:
+    executable: /bin/bash
+  become: yes
+  become_user: "{{ krb_user }}"
+
+- name: Configure cron job for ticket renewal
+  cron:
+    name: "{{ krb_user }} user ticker renewal"
+    user: "{{ krb_user }}"
+    hour: "*/5"
+    job: "/usr/bin/kinit -t /etc/krb5.keytab {{ krb_principal }}"
+
+- name: Configure cron job for ticket renewal after reboot
+  cron:
+    name: "{{ krb_user }} user ticker renewal after reboot"
+    user: "{{ krb_user }}"
+    special_time: reboot
+    job: "/usr/bin/kinit -t /etc/krb5.keytab {{ krb_principal }}"

@@ -1,0 +1,5 @@
+deb ftp://repo.metacentrum.cz/ all main pilot
+deb ftp://repo.metacentrum.cz/ stretch main pilot
+
+deb-src ftp://repo.metacentrum.cz/ all main pilot
+deb-src ftp://repo.metacentrum.cz/ stretch main pilot

@@ -1,0 +1,2 @@
+nfs_mountpoint: /storage/brno11-elixir
+nfs_server: storage-brno11-elixir.metacentrum.cz

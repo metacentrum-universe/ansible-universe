@@ -1,0 +1,118 @@
+- name: Install CernVM-FS server and dependencies (apt)
+  apt:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - apache2
+    - cvmfs-server
+    - cvmfs-config-default
+    - libapache2-mod-wsgi
+    - squid
+
+{% if cvmfs_spool_dir and cvmfs_data_dir %}
+- name: Remove CernVM-FS spool directory
+  file:
+    state: absent
+    path: /var/spool/cvmfs
+
+- name: Symlink to /srv/cvmfs
+  file:
+    src: "{{ cvmfs_data_dir }}"
+    dest: /srv/cvmfs
+    state: link
+
+- name: Symlink to /var/spool/cvmfs
+  file:
+    src: "{{ cvmfs_spool_dir }}"
+    dest: /var/spool/cvmfs
+    state: link
+{% endif %}
+
+- name: Install CernVM-FS keys
+  copy:
+    src: "{{ item }}"
+    dest: "/etc/cvmfs/keys/{{ item }}"
+  with_items:
+    - test.galaxyproject.org.pub
+    - test.galaxyproject.org.crt
+    - data.galaxyproject.org.pub
+    - data.galaxyproject.org.crt
+    - main.galaxyproject.org.pub
+    - main.galaxyproject.org.crt
+    - sandbox.galaxyproject.org.pub
+    - sandbox.galaxyproject.org.crt
+    - singularity.galaxyproject.org.pub
+    - singularity.galaxyproject.org.crt
+
+- name: Change Apache listen port
+  lineinfile:
+    dest: /etc/apache2/ports.conf
+    line: "Listen {{ apache_port }}"
+    regexp: "^Listen\\s+"
+    backup: yes
+  notify:
+    - Restart Apache service
+
+- name: Change Apache run user
+  lineinfile:
+    dest: /etc/apache2/envvars
+    line: "export APACHE_RUN_USER={{ cvmfs_apache_user }}"
+    regexp: "^export\\s+APACHE_RUN_USER=www-data"
+    backup: yes
+  notify:
+    - Restart Apache service
+
+- name: Ensure Apache is enabled and running
+  service:
+    name: apache2
+    state: started
+    enabled: yes
+
+- name: Configure Squid for stratum 1 proxy
+  template:
+    src: stratum1_squid.conf.j2
+    dest: /etc/squid/squid.conf
+    backup: yes
+  notify:
+    - Restart Squid service
+
+- name: Ensure Squid is enabled and started
+  service:
+    name: squid
+    state: started
+    enabled: yes
+
+- name: Ensure replicas are configured
+  command: /usr/bin/cvmfs_server add-replica -o {{ item.owner | default('root') }} -w http://localhost:{{ apache_port }}/cvmfs/{{ item.repository }} http://{{ item.stratum0 }}/cvmfs/{{ item.repository }} /etc/cvmfs/keys/{{ item.repository }}.pub
+  args:
+    creates: /etc/cvmfs/repositories.d/{{ item.repository }}
+  with_items: "{{ cvmfs_repositories }}"
+  notify:
+    - Restart Apache service
+
+- name: Set repository server options
+  lineinfile:
+    dest: "/etc/cvmfs/repositories.d/{{ item.0.repository }}/server.conf"
+    regexp: "^{{ item.1.split('=')[0] }}=.*"
+    line: "{{ item.1 }}"
+  with_subelements:
+    - "{{ cvmfs_repositories }}"
+    - server_options
+
+- name: Create CVMFS stratum1 logrotate configuration
+  copy:
+    content: |
+      /var/log/cvmfs/*.log {
+          weekly
+          missingok
+          notifempty
+      }
+    dest: /etc/logrotate.d/cvmfs
+
+- name: Schedule stratum1 snapshots
+  cron:
+    name: cvmfs_snapshot_all
+    cron_file: ansible_cvmfs_stratum1_snapshot
+    user: root
+    job: output=$(/usr/bin/cvmfs_server snapshot -a -i 2>&1) || echo "$output"
+    minute: "*/5"

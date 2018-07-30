@@ -1,0 +1,22 @@
+---
+- name: Register meta repository public key
+  apt_key:
+    data: "{{ lookup('file', 'meta.key') }}"
+    state: present
+
+- name: Register meta repository
+  copy:
+    src: meta.list
+    dest: /etc/apt/sources.list.d/meta.list
+
+- name: Install PBS client tools
+  apt:
+    name: pbspro-client
+    update_cache: yes
+    state: present
+
+- name: Configure PBS client tools
+  lineinfile:
+    path: /etc/pbs.conf
+    regexp: "^PBS_SERVER="
+    line: "PBS_SERVER={{ pbs_server_ip }}"

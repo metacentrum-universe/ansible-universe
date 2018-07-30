@@ -1,0 +1,25 @@
+---
+dependency_resolvers_config_file : dependency_resolvers_conf.xml
+conda_auto_init : True
+conda_auto_install : True
+staging_directory: {{ pulsar_staging_directory }}
+tool_dependency_dir: {{ pulsar_tool_dependency_directory }}
+message_queue_url: {{ pulsar_message_queue_url }}
+amqp_acknowledge: True
+{% if pulsar_require_certificate %}
+amqp_connect_ssl_cert_reqs: cert_required
+{% endif %}
+managers:
+  _default_:
+    {% if pulsar_manager == "htcondor" %}
+    type: queued_condor
+    production: True
+    submit_universe: vanilla
+    submit_should_transfer_files: yes
+    {% elseif pulsar_manager == "pbs" %}
+    type: queued_cli
+    job_plugin: Torque
+    job_destination: {{ pulsar_pbs_job_destination }}
+    job_Resource_List: walltime=10:00:00,select=ncpus=10:mem=5gb
+    job_Mail_Points: n
+    {% endif %}

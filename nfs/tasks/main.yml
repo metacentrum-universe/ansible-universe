@@ -1,0 +1,42 @@
+---
+- name: Install NFS packages
+  package:
+    name: nfs-common
+    state: present
+
+- name: Ensure NFS services are enabled + started
+  service:
+    name: "{{ item }}"
+    enabled: yes
+    state: started
+  with_items:
+    - rpcbind
+    - rpc-gssd
+
+- name: Create NFS mountpoint
+  file:
+    name: "{{ nfs_mountpoint }}"
+    state: directory
+
+- name: Copy NFS configuration
+  copy:
+    src: nfs-common
+    dest: /etc/default/nfs-common
+  notify:
+    - Restart NFS services
+
+- name: Configure idmapd
+  lineinfile:
+    dest: /etc/idmapd.conf
+    line: "Domain = META"
+    insertafter: "^# Domain = localdomain$"
+  notify:
+    - Restart NFS services
+
+- name: Mount storage
+  mount:
+    path: "{{ nfs_mountpoint }}"
+    fstype: nfs
+    state: mounted
+    src: "{{ nfs_server }}:/"
+    opts: sec=krb5i

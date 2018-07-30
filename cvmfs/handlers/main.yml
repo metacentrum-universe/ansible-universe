@@ -1,0 +1,15 @@
+---
+- name: Restart Apache service
+  service:
+    name: apache2
+    state: restarted
+
+- name: Restart Squid service
+  service:
+    name: squid
+    state: restarted
+
+- name: Reload AutoFS service
+  service:
+    name: autofs
+    state: reloaded

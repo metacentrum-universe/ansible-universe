@@ -1,0 +1,58 @@
+- name: Install CernVM-FS client
+  apt:
+    name: cvmfs
+
+- name: Install CernVM-FS keys
+  copy:
+    src: "{{ item }}"
+    dest: "/etc/cvmfs/keys/{{ item }}"
+  with_items:
+    - test.galaxyproject.org.pub
+    - test.galaxyproject.org.crt
+    - data.galaxyproject.org.pub
+    - data.galaxyproject.org.crt
+    - main.galaxyproject.org.pub
+    - main.galaxyproject.org.crt
+    - sandbox.galaxyproject.org.pub
+    - sandbox.galaxyproject.org.crt
+    - singularity.galaxyproject.org.pub
+    - singularity.galaxyproject.org.crt
+
+- name: Check CernVM-FS for setup
+  command: cvmfs_config chksetup
+  changed_when: no
+  ignore_errors: yes
+  register: cvmfs_config_chksetup_out
+
+- name: Ensure AutoFS is enabled + running
+  service:
+    name: autofs
+    enabled: yes
+    state: started
+
+- name: Perform AutoFS and FUSE configuration for CernVM-FS
+  command: cvmfs_config setup
+  notify:
+    - Reload AutoFS service
+  args:
+    creates: /etc/auto.master.d/cvmfs.autofs
+
+- name: Configure CernVM-FS domain
+  copy:
+    content: |
+      CVMFS_SERVER_URL="http://{{ cvmfs_stratum1_ip }}/cvmfs/@fqrn@"
+    dest: "/etc/cvmfs/domain.d/galaxyproject.org.conf"
+    owner: "root"
+    group: "root"
+    mode: "0644"
+
+- name: Configure CernVM-FS client settings
+  copy:
+    content: |
+      CVMFS_REPOSITORIES="{%- for repo in cvmfs_repositories -%}{{ ',' if loop.index0 > 0 else '' }}{{ repo.repository }}{%- endfor -%}"
+      CVMFS_HTTP_PROXY="DIRECT"
+      CVMFS_QUOTA_LIMIT="1024"
+    dest: "/etc/cvmfs/default.local"
+    owner: "root"
+    group: "root"
+    mode: "0644"

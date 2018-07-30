@@ -1,0 +1,52 @@
+cvmfs_server_urls:
+  - domain: galaxyproject.org
+    urls:
+      - "http://cvmfs1-tacc0.galaxyproject.org/cvmfs/@fqrn@"
+      - "http://cvmfs1-iu0.galaxyproject.org/cvmfs/@fqrn@"
+      - "http://cvmfs1-psu0.galaxyproject.org/cvmfs/@fqrn@"
+
+cvmfs_repositories:
+  - repository: test.galaxyproject.org
+    stratum0: cvmfs0-tacc0.galaxyproject.org
+    owner: galaxyeu
+    server_options:
+      - CVMFS_AUTO_GC=false
+    client_options: []
+  - repository: main.galaxyproject.org
+    stratum0: cvmfs0-tacc0.galaxyproject.org
+    owner: galaxyeu
+    server_options:
+      - CVMFS_AUTO_GC=false
+    client_options: []
+  - repository: data.galaxyproject.org
+    stratum0: cvmfs0-psu0.galaxyproject.org
+    owner: galaxyeu
+    server_options:
+      - CVMFS_AUTO_GC=false
+    client_options: []
+  - repository: sandbox.galaxyproject.org
+    stratum0: cvmfs0-psu0.galaxyproject.org
+    owner: galaxyeu
+    server_options: []
+    client_options: []
+  - repository: singularity.galaxyproject.org
+    stratum0: cvmfs0-psu0.galaxyproject.org
+    owner: galaxyeu
+    server_options: []
+    client_options: []
+
+
+cvmfs_http_proxies:
+  - DIRECT
+
+cvmfs_stratum1_servers:
+  - "cvmfs1-tacc0.galaxyproject.org"
+  - "cvmfs1-iu0.galaxyproject.org"
+  - "cvmfs1-psu0.galaxyproject.org"
+
+cvmfs_apache_port: 8008
+cvmfs_squid_cache_mem: 128
+cvmfs_squid_inventory_hostname: meta-cvmfs-stratum1
+cvmfs_spool_dir: /storage/brno11-elixir/projects/cvmfs/spool
+cvmfs_data_dir: /storage/brno11-elixir/projects/cvmfs/data
+cvmfs_apache_user: galaxyeu

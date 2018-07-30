@@ -1,0 +1,97 @@
+---
+- name: Install dependencies
+  package:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - python3
+    - python-dev
+    - python-pip
+    - gcc
+
+- name: Install python dependencies
+  pip:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - pip
+    - virtualenv
+
+- name: Create Pulsar directory
+  file:
+    name: "{{ pulsar_directory }}"
+    state: directory
+
+- name: Install Pulsar
+  pip:
+    name: "{{ item }}"
+    virtualenv: "{{ pulsar_directory }}/venv"
+    chdir: "{{ pulsar_directory }}"
+  become: yes
+  become_user: "{{ pulsar_user }}"
+  with_items:
+    - pulsar-app
+    - kombu
+    - poster
+    - drmaa
+
+- name: Pulsar app.yml configuration file
+  template:
+    src: app.yml.j2
+    dest: "{{ pulsar_directory }}/app.yml"
+    owner: "{{ pulsar_user }}"
+    {% if pulsar_group %}
+    group: "{{ pulsar_group }}"
+    {% endif %}
+
+- name: Pulsar dependency resolvers configuration file
+  copy:
+    src: dependency_resolvers_conf.xml
+    dest: "{{ pulsar_directory }}/dependency_resolvers_conf.xml"
+    owner: "{{ pulsar_user }}"
+    {% if pulsar_group %}
+    group: "{{ pulsar_group }}"
+    {% endif %}
+
+- name: Pulsar local_env.sh configuration file
+  copy:
+    src: local_env.sh
+    dest: "{{ pulsar_directory }}/local_env.sh"
+    owner: "{{ pulsar_user }}"
+    {% if pulsar_group %}
+    group: "{{ pulsar_group }}"
+    {% endif %}
+
+- name: Pulsar server.ini configuration file
+  template:
+    src: server.ini.j2
+    dest: "{{ pulsar_directory }}/server.ini"
+    owner: "{{ pulsar_user }}"
+    {% if pulsar_group %}
+    group: "{{ pulsar_group }}"
+    {% endif %}
+
+- name: Pulsar staging directory cleaning script
+  template:
+    src: cleaning.sh.j2
+    dest: "{{ pulsar_directory }}/cleaning.sh"
+    owner: "{{ pulsar_user }}"
+    {% if pulsar_group %}
+    group: "{{ pulsar_group }}"
+    {% endif %}
+    mode: +x
+
+- name: Configure cron job for cleaning staging directory
+  cron:
+    name: cleaning pulsar staging directory
+    user: "{{ pulsar_user }}"
+    minute: "*/10"
+    job: "{{ pulsar_directory }}/cleaning.sh"
+
+- name: Run Pulsar
+  shell: source venv/bin/activate && pulsar --daemon
+  args:
+    chdir: "{{ pulsar_directory }}/pulsar"
+    executable: /bin/bash
+  become: yes
+  become_user: "{{ pulsar_user }}"
