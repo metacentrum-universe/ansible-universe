@@ -3,6 +3,7 @@ Ansible roles for all the space stuff.
 ## Roles:
 * basic
 * cvmfs
+* galaxy
 * htcondor
 * krb
 * nfs

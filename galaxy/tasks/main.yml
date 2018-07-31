@@ -1,0 +1,40 @@
+---
+- name: Create install directory
+  file:
+    name: "{{ galaxy_directory }}"
+    state: directory
+
+- name: Download Galaxy
+  git:
+    repo: 'https://github.com/galaxyproject/galaxy.git'
+    dest: "{{ galaxy_directory }}"
+    version: "{{ galaxy_version }}"
+
+- name: Copy configuration file
+  copy:
+    src: "{{ galaxy_directory }}/config/galaxy.yml.sample"
+    dest: "{{ galaxy_directory }}/config/galaxy.yml"
+    remote_src: yes
+
+- name: Configure endpoint
+  lineinfile:
+    dest: "{{ galaxy_directory }}/config/galaxy.yml"
+    line: "  http: {{ galaxy_ip }}:{{ galaxy_port }}"
+    regexp: '^\s*http: 127.0.0.1:8080'
+
+- name: Configure admins
+  lineinfile:
+    dest: "{{ galaxy_directory }}/config/galaxy.yml"
+    line: "  admin_users: {{ galaxy_admins }}"
+    regexp: '^\s*#admin_users: null'
+
+- name: Configure jobs
+  template:
+    src: job_conf.xml.j2
+    dest: "{{ galaxy_directory }}/config/job_conf.xml"
+
+- name: Run Galaxy
+  shell: ./run.sh &
+  args:
+    chdir: "{{ galaxy_directory }}"
+    executable: /bin/sh
