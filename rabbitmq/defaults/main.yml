@@ -1,0 +1,3 @@
+rabbitmq_galaxy_vhost = "galaxyeu"
+rabbitmq_galaxy_user_name = "galaxyeu"
+rabbitmq_admin_user_name = "admin"
