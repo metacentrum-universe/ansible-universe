@@ -91,7 +91,7 @@
 - name: Run Pulsar
   shell: source venv/bin/activate && pulsar --daemon
   args:
-    chdir: "{{ pulsar_directory }}/pulsar"
+    chdir: "{{ pulsar_directory }}"
     executable: /bin/bash
   become: yes
   become_user: "{{ pulsar_user }}"
