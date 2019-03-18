@@ -1,6 +1,10 @@
 - name: Install CernVM-FS client
   apt:
-    name: cvmfs
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - cvmfs
+    - uuid-runtime
 
 - name: Install CernVM-FS keys
   copy:

@@ -9,24 +9,46 @@
     - libapache2-mod-wsgi
     - squid
 
-{% if cvmfs_spool_dir and cvmfs_data_dir %}
 - name: Remove CernVM-FS spool directory
   file:
     state: absent
     path: /var/spool/cvmfs
+  when: (cvmfs_spool_dir is defined) and (cvmfs_data_dir is defined)
 
 - name: Symlink to /srv/cvmfs
   file:
     src: "{{ cvmfs_data_dir }}"
     dest: /srv/cvmfs
     state: link
+  when: (cvmfs_spool_dir is defined) and (cvmfs_data_dir is defined)
 
 - name: Symlink to /var/spool/cvmfs
   file:
     src: "{{ cvmfs_spool_dir }}"
     dest: /var/spool/cvmfs
     state: link
-{% endif %}
+  when: (cvmfs_spool_dir is defined) and (cvmfs_data_dir is defined)
+
+- name: Backup main CVMFS script
+  copy:
+    src: /usr/bin/cvmfs_server
+    dest: /usr/bin/cvmfs_server.backup
+    remote_src: yes
+  when: cvmfs_already_exists
+
+- name: Get rid of unnecessary chown
+  lineinfile:
+    dest: /usr/bin/cvmfs_server
+    regexp: 'chown -R \$user \$\{directory\}/'
+    line: 'echo "skipping chown"'
+  when: cvmfs_already_exists
+
+- name: Get rid of unnecessary ln
+  lineinfile:
+    dest: /usr/bin/cvmfs_server
+    regexp: 'ln -s \$\{storage_dir\}\/data\/txn \$temp_dir \|\| die "fail \(ln -s\)"'
+    line: 'echo "skipping ln"'
+  when: cvmfs_already_exists
 
 - name: Install CernVM-FS keys
   copy:
@@ -47,7 +69,7 @@
 - name: Change Apache listen port
   lineinfile:
     dest: /etc/apache2/ports.conf
-    line: "Listen {{ apache_port }}"
+    line: "Listen {{ cvmfs_apache_port }}"
     regexp: "^Listen\\s+"
     backup: yes
   notify:
@@ -83,12 +105,19 @@
     enabled: yes
 
 - name: Ensure replicas are configured
-  command: /usr/bin/cvmfs_server add-replica -o {{ item.owner | default('root') }} -w http://localhost:{{ apache_port }}/cvmfs/{{ item.repository }} http://{{ item.stratum0 }}/cvmfs/{{ item.repository }} /etc/cvmfs/keys/{{ item.repository }}.pub
+  command: /usr/bin/cvmfs_server add-replica -o {{ item.owner | default('root') }} -w http://localhost:{{ cvmfs_apache_port }}/cvmfs/{{ item.repository }} http://{{ item.stratum0 }}/cvmfs/{{ item.repository }} /etc/cvmfs/keys/{{ item.repository }}.pub
   args:
     creates: /etc/cvmfs/repositories.d/{{ item.repository }}
   with_items: "{{ cvmfs_repositories }}"
   notify:
     - Restart Apache service
+
+- name: Revert main CVMFS script
+  copy:
+    src: /usr/bin/cvmfs_server.backup
+    dest: /usr/bin/cvmfs_server
+    remote_src: yes
+  when: cvmfs_already_exists
 
 - name: Set repository server options
   lineinfile:

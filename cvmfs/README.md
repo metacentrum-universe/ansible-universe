@@ -13,3 +13,4 @@ Installs CVMFS client tools and stratum1
 * **cvmfs_spool_dir** - Directory where to link /var/spool/cvmfs/
 * **cvmfs_data_dir** - Directory where to link /srv/cvmfs/
 * **cvmfs_apache_user** - User under which Apache server is run
+* **cvmfs_already_exists** - Whether CVMFS Stratum1 data is already available (skips some chown and ln commands)
