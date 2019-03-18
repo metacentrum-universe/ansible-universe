@@ -4,16 +4,22 @@
     name: "{{ item }}"
     state: present
   with_items:
-    - pygpgme
+    - python-gpgme
+    - python3-gpgme
 
 - name: Add repository key
   apt_key:
     url: https://dl.bintray.com/rabbitmq/Keys/rabbitmq-release-signing-key.asc
     state: present
 
-- name: Add respository
+- name: Add rabbitmq-server respository
   apt_repository:
     repo: deb https://dl.bintray.com/rabbitmq/debian stretch main
+    state: present
+
+- name: Add erlang respository
+  apt_repository:
+    repo: deb https://dl.bintray.com/rabbitmq/debian stretch erlang
     state: present
 
 - name: Install RabbitMQ
