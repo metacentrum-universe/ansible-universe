@@ -1,5 +1,5 @@
-galaxy_version = "v18.05"
-galaxy_directory = "/opt/galaxy"
-galaxy_port = "8080"
-galaxy_admins = "kimle@cesnet.cz"
-galaxy_submit_user = "galaxyeu"
+galaxy_version: release_18.05
+galaxy_directory: /opt/galaxy
+galaxy_port: 8080
+galaxy_admins: kimle@cesnet.cz
+galaxy_submit_user: galaxyeu
