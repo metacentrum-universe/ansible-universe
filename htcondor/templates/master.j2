@@ -1,6 +1,5 @@
-CONDOR_HOST = {{ condor_master_ip }}
-ALLOW_WRITE = 127.0.0.1{% for ip in htcondor_ip_addresses %}, {{ ip }}
-{%- endfor %}
+CONDOR_HOST = {{ htcondor_master_ip }}
+ALLOW_WRITE = 127.0.0.1, {{ htcondor_ip_addresses }}
 
 ALLOW_READ = $(ALLOW_WRITE)
 ALLOW_NEGOTIATOR = $(ALLOW_WRITE)
