@@ -34,51 +34,37 @@
     - kombu
     - poster
     - drmaa
+    - uwsgi
 
 - name: Pulsar app.yml configuration file
   template:
     src: app.yml.j2
     dest: "{{ pulsar_directory }}/app.yml"
     owner: "{{ pulsar_user }}"
-    {% if pulsar_group %}
-    group: "{{ pulsar_group }}"
-    {% endif %}
 
 - name: Pulsar dependency resolvers configuration file
   copy:
     src: dependency_resolvers_conf.xml
     dest: "{{ pulsar_directory }}/dependency_resolvers_conf.xml"
     owner: "{{ pulsar_user }}"
-    {% if pulsar_group %}
-    group: "{{ pulsar_group }}"
-    {% endif %}
 
 - name: Pulsar local_env.sh configuration file
-  copy:
-    src: local_env.sh
+  template:
+    src: local_env.sh.j2
     dest: "{{ pulsar_directory }}/local_env.sh"
     owner: "{{ pulsar_user }}"
-    {% if pulsar_group %}
-    group: "{{ pulsar_group }}"
-    {% endif %}
 
 - name: Pulsar server.ini configuration file
   template:
     src: server.ini.j2
     dest: "{{ pulsar_directory }}/server.ini"
     owner: "{{ pulsar_user }}"
-    {% if pulsar_group %}
-    group: "{{ pulsar_group }}"
-    {% endif %}
 
 - name: Pulsar staging directory cleaning script
   template:
     src: cleaning.sh.j2
     dest: "{{ pulsar_directory }}/cleaning.sh"
     owner: "{{ pulsar_user }}"
-    {% if pulsar_group %}
-    group: "{{ pulsar_group }}"
-    {% endif %}
     mode: +x
 
 - name: Configure cron job for cleaning staging directory
@@ -89,7 +75,7 @@
     job: "{{ pulsar_directory }}/cleaning.sh"
 
 - name: Run Pulsar
-  shell: source venv/bin/activate && pulsar --daemon
+  shell: source venv/bin/activate && pulsar --daemonize uwsgi.log
   args:
     chdir: "{{ pulsar_directory }}"
     executable: /bin/bash

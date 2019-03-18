@@ -11,15 +11,15 @@ amqp_connect_ssl_cert_reqs: cert_required
 {% endif %}
 managers:
   _default_:
-    {% if pulsar_manager == "htcondor" %}
+{% if pulsar_manager == "htcondor" %}
     type: queued_condor
     production: True
     submit_universe: vanilla
     submit_should_transfer_files: yes
-    {% elseif pulsar_manager == "pbs" %}
+{% elif pulsar_manager == "pbs" %}
     type: queued_cli
     job_plugin: Torque
     job_destination: {{ pulsar_pbs_job_destination }}
     job_Resource_List: walltime=10:00:00,select=ncpus=10:mem=5gb
     job_Mail_Points: n
-    {% endif %}
+{% endif %}

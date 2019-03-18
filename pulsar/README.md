@@ -11,4 +11,3 @@ Install and configure Pulsar
 * **pulsar_bind_port** - Pulsar server port
 * **pulsar_directory** - Directory where to install Pulsar
 * **pulsar_user** - User under which is Pulsar run
-* **pulsar_group** - Group for Pulsar files
